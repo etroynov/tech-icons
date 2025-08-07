@@ -1,5 +1,6 @@
 mod middlewares;
 mod routes;
+mod utils;
 
 use axum::Router;
 
