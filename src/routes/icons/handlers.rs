@@ -1,10 +1,13 @@
 use axum::{
+    Json,
     extract::Query,
     http::{StatusCode, header},
     response::IntoResponse,
 };
 use serde::Deserialize;
 use tokio::fs;
+
+use crate::utils::file_names_in;
 
 const STATIC_PATH: &'static str = "./assets/icons";
 const SVG_CONTENT_TYPE: &'static str = "image/svg+xml";
@@ -24,5 +27,12 @@ pub async fn get_icon(Query(params): Query<QueryParams>) -> impl IntoResponse {
     match fs::read(path).await {
         Ok(bytes) => ([(header::CONTENT_TYPE, SVG_CONTENT_TYPE)], bytes).into_response(),
         Err(_) => (StatusCode::NOT_FOUND, "Icon file not found").into_response(),
+    }
+}
+
+pub async fn get_names() -> impl IntoResponse {
+    match file_names_in("./assets/icons") {
+        Ok(files) => Json(files).into_response(),
+        Err(_) => (StatusCode::NOT_FOUND, "Icon files not found").into_response(),
     }
 }
