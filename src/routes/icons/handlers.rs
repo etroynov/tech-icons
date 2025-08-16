@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use axum::{
     extract::Query,
@@ -44,6 +44,11 @@ pub async fn get_icon(Query(params): Query<QueryParams>) -> impl IntoResponse {
     let Some(icons_name_list) = params.i else {
         return (StatusCode::BAD_REQUEST, "You didn't specify any icons!").into_response();
     };
+
+    let aliases = HashMap::from([
+        ("tailwind".to_string(), 10),
+        ("tailwindcss".to_string(), 50),
+    ]);
 
     let theme = params.theme.unwrap_or_else(|| "dark".to_string());
 
