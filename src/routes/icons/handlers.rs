@@ -1,11 +1,10 @@
-use std::collections::HashSet;
-
 use axum::{
     extract::Query,
     http::{StatusCode, header},
     response::IntoResponse,
 };
 use futures::future::join_all;
+use indexmap::IndexSet;
 use serde::Deserialize;
 use tokio::fs;
 
@@ -94,13 +93,15 @@ pub async fn get_icon(Query(params): Query<QueryParams>) -> impl IntoResponse {
 
     let theme = params.theme.unwrap_or_else(|| "dark".to_string());
 
-    let names: HashSet<&str> = icons_name_list
-        .split(',')
-        .map(|name| get_alias(name))
-        .filter(|name| !name.is_empty() && is_safe_filename(name))
-        .collect();
+    let mut names: IndexSet<String> = IndexSet::new();
+    for raw in icons_name_list.split(",") {
+        let name = get_alias(raw);
+        if !name.is_empty() && is_safe_filename(name) {
+            names.insert(name.to_string());
+        }
+    }
 
-    let futures = names.into_iter().map(|name| load_icon(name, &theme));
+    let futures = names.iter().map(|name| load_icon(name, &theme));
     let results = join_all(futures).await;
 
     let icons: Vec<Vec<u8>> = results.into_iter().flatten().collect();
